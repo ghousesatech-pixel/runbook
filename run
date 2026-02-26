@@ -1,0 +1,25 @@
+Title: SQS Queue Backlog / Message Aging – Runbook
+
+Symptoms:
+- CloudWatch alert: Queue depth high
+- CloudWatch alert: Oldest message age high
+
+Triage:
+- Check CloudWatch metrics for backlog and age
+- Check consumer service health (pods / ECS tasks / StreamSets jobs)
+- Review recent deployments
+
+Mitigation:
+- Scale consumers (HPA / ECS scaling)
+- Restart stuck workers
+- Validate downstream dependencies
+- Purge queue ONLY with approval
+
+Escalation:
+- Platform On-call
+- Data Cloud team
+
+Links:
+- CloudWatch Dashboard: <link>
+- Logs: <link>
+- Queue(s): <names>
