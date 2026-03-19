@@ -226,11 +226,26 @@ Reason(s):
 
 
 {
-  "alarmName": "sqs-queue-depth-20",
+  "alarmName": "sqs-your-queue-depth-high",
   "alarmData": {
+    "configuration": {
+      "metrics": [
+        {
+          "metricStat": {
+            "metric": {
+              "namespace": "AWS/SQS",
+              "name": "ApproximateNumberOfMessagesVisible",
+              "dimensions": {
+                "QueueName": "YOUR_QUEUE_NAME"
+              }
+            }
+          }
+        }
+      ]
+    },
     "state": {
       "value": "ALARM",
-      "reason": "Threshold Crossed: 1 out of the last 1 datapoints was greater than or equal to the threshold (20)."
+      "reason": "Threshold Crossed"
     }
   }
 }
