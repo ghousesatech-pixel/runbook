@@ -38,3 +38,16 @@ Full Event:
             "sns_message_id": response["MessageId"]
         })
     }
+
+
+
+
+{
+  "alarmName": "sqs-queue-depth-20",
+  "alarmData": {
+    "state": {
+      "value": "ALARM",
+      "reason": "Threshold Crossed: 1 out of the last 1 datapoints was greater than or equal to the threshold (20)."
+    }
+  }
+}
