@@ -23,3 +23,12 @@ Links:
 - CloudWatch Dashboard: <link>
 - Logs: <link>
 - Queue(s): <names>
+
+
+
+
+for i in {1..25}; do
+  aws sqs send-message \
+    --queue-url https://sqs.us-east-2.amazonaws.com/ACCOUNT_ID/YOUR_QUEUE_NAME \
+    --message-body "test-message-$i"
+done
