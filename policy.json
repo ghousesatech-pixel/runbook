@@ -2,7 +2,7 @@
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "CloudWatchReadMetrics",
+      "Sid": "CloudWatchRead",
       "Effect": "Allow",
       "Action": [
         "cloudwatch:GetMetricData"
@@ -10,133 +10,12 @@
       "Resource": "*"
     },
     {
-      "Sid": "PublishToSns",
+      "Sid": "SNSPublish",
       "Effect": "Allow",
       "Action": [
         "sns:Publish"
       ],
-      "Resource": "arn:aws:sns:us-east-2:123456789012:sqs-alert-topic"
-    },
-    {
-      "Sid": "WriteLogs",
-      "Effect": "Allow",
-      "Action": [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-
-
-
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "CloudWatchReadMetrics",
-      "Effect": "Allow",
-      "Action": [
-        "cloudwatch:GetMetricData"
-      ],
-      "Resource": "*"
-    },
-    {
-      "Sid": "SendEmailWithSES",
-      "Effect": "Allow",
-      "Action": [
-        "ses:SendEmail",
-        "ses:SendRawEmail",
-        "sesv2:SendEmail"
-      ],
-      "Resource": "*"
-    },
-    {
-      "Sid": "WriteLogs",
-      "Effect": "Allow",
-      "Action": [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-
-
-
-
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "CloudWatchReadMetrics",
-      "Effect": "Allow",
-      "Action": [
-        "cloudwatch:GetMetricData"
-      ],
-      "Resource": "*"
-    },
-    {
-      "Sid": "SendEmailWithSES",
-      "Effect": "Allow",
-      "Action": [
-        "ses:SendEmail",
-        "ses:SendRawEmail",
-        "sesv2:SendEmail"
-      ],
-      "Resource": "*"
-    },
-    {
-      "Sid": "WriteLogs",
-      "Effect": "Allow",
-      "Action": [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-
-
-
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "CloudWatchReadMetrics",
-      "Effect": "Allow",
-      "Action": [
-        "cloudwatch:GetMetricData"
-      ],
-      "Resource": "*"
-    },
-    {
-      "Sid": "SendEmailWithSES",
-      "Effect": "Allow",
-      "Action": [
-        "ses:SendEmail",
-        "ses:SendRawEmail",
-        "sesv2:SendEmail"
-      ],
-      "Resource": [
-        "arn:aws:ses:us-east-2:693779145154:identity/mohammadghouse.shaik@fiserv.com"
-      ]
-    },
-    {
-      "Sid": "WriteLogs",
-      "Effect": "Allow",
-      "Action": [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
-      ],
-      "Resource": "*"
+      "Resource": "arn:aws:sns:us-east-2:123456789012:your-topic-name"
     }
   ]
 }
