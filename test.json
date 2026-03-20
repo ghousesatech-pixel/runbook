@@ -1,0 +1,28 @@
+{
+  "alarmName": "sqs_visible",
+  "alarmData": {
+    "configuration": {
+      "metrics": [
+        {
+          "metricStat": {
+            "metric": {
+              "namespace": "AWS/SQS",
+              "name": "ApproximateNumberOfMessagesVisible",
+              "dimensions": {
+                "QueueName": "sqs-alerting-poc-queue"
+              }
+            },
+            "period": 300,
+            "stat": "Average"
+          }
+        }
+      ],
+      "threshold": 20,
+      "comparisonOperator": "GreaterThanOrEqualToThreshold"
+    },
+    "state": {
+      "value": "ALARM",
+      "reason": "Threshold Crossed"
+    }
+  }
+}
