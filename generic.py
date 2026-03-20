@@ -12,8 +12,7 @@ logger.setLevel(os.getenv("LOG_LEVEL", "INFO"))
 # ----------------------------
 # Environment configuration
 # ----------------------------
-EMAIL_FROM = os.getenv("EMAIL_FROM", "")
-EMAIL_TO = [x.strip() for x in os.getenv("EMAIL_TO", "").split(",") if x.strip()]
+SNS_TOPIC_ARN = os.getenv("SNS_TOPIC_ARN", "")
 
 HISTORY_DAYS = int(os.getenv("HISTORY_DAYS", "14"))
 BASELINE_PERIOD_SECONDS = int(os.getenv("BASELINE_PERIOD_SECONDS", "300"))
@@ -79,8 +78,8 @@ def _parse_time(t: Any) -> Optional[datetime]:
 def build_clients(region: Optional[str] = None):
     region_name = region or os.getenv("AWS_REGION")
     cw = boto3.client("cloudwatch", region_name=region_name)
-    ses = boto3.client("sesv2", region_name=region_name)
-    return cw, ses
+    sns = boto3.client("sns", region_name=region_name)
+    return cw, sns
 
 
 def _dim_to_key(dimensions: List[Dict[str, str]]) -> str:
@@ -101,7 +100,7 @@ def _get_dimension_value(dimensions: List[Dict[str, str]], key: str) -> Optional
 # Supports:
 # 1. EventBridge alarm events
 # 2. Direct CloudWatch -> Lambda events
-# 3. Your current test format with alarmData.configuration.metrics
+# 3. Custom test format with alarmData.configuration.metrics
 # ----------------------------
 def _extract_metric_from_eventbridge_detail(detail: Dict[str, Any]) -> Dict[str, Any]:
     cfg = detail.get("configuration", {}) or {}
@@ -158,30 +157,6 @@ def _extract_metric_from_direct_alarm(event: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _extract_metric_from_alarmdata(event: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Supports your current test payload:
-    {
-      "alarmName": "...",
-      "alarmData": {
-        "configuration": {
-          "metrics": [
-            {
-              "metricStat": {
-                "metric": {
-                  "namespace": "AWS/SQS",
-                  "name": "ApproximateNumberOfMessagesVisible",
-                  "dimensions": {
-                    "QueueName": "queue-name"
-                  }
-                }
-              }
-            }
-          ]
-        },
-        "state": {...}
-      }
-    }
-    """
     alarm_data = event.get("alarmData", {}) or {}
     cfg = alarm_data.get("configuration", {}) or {}
     metrics = cfg.get("metrics", []) or []
@@ -213,7 +188,6 @@ def _extract_metric_from_alarmdata(event: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def parse_alarm_event(event: Dict[str, Any]) -> Dict[str, Any]:
-    # EventBridge event format
     if event.get("detail-type") == "CloudWatch Alarm State Change" and "detail" in event:
         d = event["detail"]
         alarm_name = d.get("alarmName", "")
@@ -237,7 +211,6 @@ def parse_alarm_event(event: Dict[str, Any]) -> Dict[str, Any]:
             **metric_info,
         }
 
-    # Direct CloudWatch alarm action format
     alarm_name = event.get("AlarmName") or event.get("alarmName") or ""
     state = event.get("NewStateValue") or event.get("state") or ""
     region = event.get("Region") or event.get("region") or os.getenv("AWS_REGION", "")
@@ -246,7 +219,6 @@ def parse_alarm_event(event: Dict[str, Any]) -> Dict[str, Any]:
 
     metric_info = _extract_metric_from_direct_alarm(event)
 
-    # Your current custom/test event format
     if not metric_info.get("metric") and "alarmData" in event:
         metric_info = _extract_metric_from_alarmdata(event)
         if not state:
@@ -443,26 +415,19 @@ def sqs_verdict(current_visible, baseline_visible, sqs_extra):
 
 
 # ----------------------------
-# Email
+# SNS Notification
 # ----------------------------
-def send_email(ses, subject: str, message: str):
-    if not EMAIL_FROM or not EMAIL_TO:
-        logger.info("EMAIL_FROM or EMAIL_TO not set; skipping email")
+def send_sns_notification(sns, subject: str, message: str):
+    if not SNS_TOPIC_ARN:
+        logger.info("SNS_TOPIC_ARN not set; skipping SNS publish")
         logger.info("Subject=%s", subject)
         logger.info("Message=\n%s", message)
         return
 
-    ses.send_email(
-        FromEmailAddress=EMAIL_FROM,
-        Destination={"ToAddresses": EMAIL_TO},
-        Content={
-            "Simple": {
-                "Subject": {"Data": subject[:200]},
-                "Body": {
-                    "Text": {"Data": message}
-                }
-            }
-        }
+    sns.publish(
+        TopicArn=SNS_TOPIC_ARN,
+        Subject=subject[:100],
+        Message=message
     )
 
 
@@ -524,7 +489,7 @@ def lambda_handler(event, context):
     try:
         parsed = parse_alarm_event(event)
         region = parsed.get("region") or os.getenv("AWS_REGION")
-        cw, ses = build_clients(region)
+        cw, sns = build_clients(region)
 
         alarm_name = parsed["alarm_name"]
         state = parsed["state"]
@@ -609,7 +574,7 @@ def lambda_handler(event, context):
         )
 
         subject = f"Alarm baseline analysis: {alarm_name} -> {verdict}"
-        send_email(ses, subject, msg)
+        send_sns_notification(sns, subject, msg)
 
         return {
             "statusCode": 200,
@@ -631,14 +596,14 @@ def lambda_handler(event, context):
         if FAIL_OPEN:
             try:
                 region = (event.get("region") or event.get("Region") or os.getenv("AWS_REGION"))
-                _, ses = build_clients(region)
-                send_email(
-                    ses,
+                _, sns = build_clients(region)
+                send_sns_notification(
+                    sns,
                     "Alarm baseline analysis FAILED",
                     f"Analysis failed.\n\nError: {str(e)}\n\nEvent:\n{safe_json(event)}"
                 )
             except Exception:
-                logger.exception("Failed to send failure email.")
+                logger.exception("Failed to send failure SNS notification.")
 
             return {
                 "statusCode": 200,
