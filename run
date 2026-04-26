@@ -32,3 +32,23 @@ for i in {1..25}; do
     --queue-url https://sqs.us-east-2.amazonaws.com/ACCOUNT_ID/YOUR_QUEUE_NAME \
     --message-body "test-message-$i"
 done
+
+
+
+  I completed the current validation cycle for the Design Node to Design Node flow.
+
+  What we validated:
+
+  1. Promotion flow from one Design node to another.
+  2. Scenario-driven execution as part of the process, including expected success/failure behavior.
+  3. End-to-end visibility and control points for traceability.
+
+  Connectivity handling:
+
+  1. We are using environment-based connection management so each node can point to its own data source configuration.
+  2. This enables the same promoted package to run across environments without manual code changes.
+
+  Current testing status:
+
+  1. Validation has been completed using CSV-based data.
+  2. Snowflake connectivity testing is planned next and will be executed
